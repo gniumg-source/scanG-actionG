@@ -1,0 +1,61 @@
+Instalar Sysdig CLI Scanner para escanear tuberías
+El escáner de vulnerabilidades de la CLI de Sysdig sysdig-cli-scanneres una herramienta versátil diseñada para escanear manualmente imágenes y directorios de contenedores, ya sea local o remotamente. Según su caso de uso específico, puede ejecutarlo sysdig-cli-scanneren modo de gestión de vulnerabilidades (VM) para el escaneo de imágenes o en modo de infraestructura como código (IaC) para el escaneo de directorios.
+Despliegue
+Es sysdig-cli-scannerun binario que puedes descargar y ejecutar localmente en tu computadora o entorno.
+
+Descargue la última versión de sysdig-cli-scannercon:
+Linux:
+
+Procesador Intel (AMD64)
+
+curl -LO "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/$(curl -L -s https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt)/linux/amd64/sysdig-cli-scanner"
+Procesador ARM (ARM64)
+
+curl -LO "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/$(curl -L -s https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt)/linux/arm64/sysdig-cli-scanner"
+Sistema operativo Mac:
+
+Procesador Intel (AMD64)
+
+curl -LO "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/$(curl -L -s https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt)/darwin/amd64/sysdig-cli-scanner"
+Procesador Apple Silicon (M1, M2) (ARM64)
+
+curl -LO "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/$(curl -L -s https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt)/darwin/arm64/sysdig-cli-scanner"
+Opcionalmente puedes marcar sha256sumcomo:
+
+Linux:
+
+Procesador Intel (AMD64)
+
+sha256sum -c <(curl -sL "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/$(curl -L -s https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt)/linux/amd64/sysdig-cli-scanner.sha256")
+Procesador ARM (ARM64)
+
+sha256sum -c <(curl -sL "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/$(curl -L -s https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt)/linux/arm64/sysdig-cli-scanner.sha256")
+Sistema operativo Mac:
+
+Procesador Intel (AMD64)
+
+shasum -a 256 -c <(curl -sL "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/$(curl -L -s https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt)/darwin/amd64/sysdig-cli-scanner.sha256")
+Procesador Apple Silicon (M1, M2) (ARM64)
+
+shasum -a 256 -c <(curl -sL "https://download.sysdig.com/scanning/bin/sysdig-cli-scanner/$(curl -L -s https://download.sysdig.com/scanning/sysdig-cli-scanner/latest_version.txt)/darwin/arm64/sysdig-cli-scanner.sha256")
+Establezca el indicador ejecutable en el archivo:
+
+chmod +x ./sysdig-cli-scanner
+Solo necesitas descargar y configurar el ejecutable una vez. Luego:
+
+Puede escanear imágenes o recursos IaC ejecutando el sysdig-cli-scannercomando:
+
+Para el modo VM:
+
+SECURE_API_TOKEN=<your-api-token> ./sysdig-cli-scanner --apiurl <sysdig-api-url> <image-name>
+Para el modo IaC:
+
+SECURE_API_TOKEN=<your-api-token> ./sysdig-cli-scanner --iac --apiurl <sysdig-api-url> <PathsToScan>
+Próximos pasos
+Continúe con una de las siguientes opciones:
+
+Ejecutar sysdig-cli-scanneren modo VM .
+
+Ejecutar sysdig-cli-scanneren modo IaC .
+
+Construya y ejecute sysdig-cli-scannercon una imagen de contenedor personalizada
