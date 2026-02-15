@@ -1,0 +1,192 @@
+
+Documentación
+Sysdig Secure
+Incorporación
+Escaneo de tuberías
+Ejecutar el escáner CLI en modo VM
+Ejecutar el escáner CLI en modo VM
+Ejecute el escáner de interfaz de línea de comandos (CLI) de Sysdig en modo de gestión de vulnerabilidades (VM) para identificar vulnerabilidades en sus imágenes, ya sea local o remotamente. Integre el escáner en su canalización de integración continua e implementación continua (CI/CD) para gestionar vulnerabilidades durante el desarrollo.
+La herramienta escanea las imágenes antes del tiempo de ejecución y muestra los resultados en la terminal o en la página Vulnerabilidades > Pipeline de Sysdig Secure. También puede crear políticas y reglas adicionales para el escaneo de pipelines.
+
+El escáner sysdig-cli-scanner tiene un límite de velocidad de 120 imágenes de contenedores por minuto.
+
+Prerrequisitos
+Asegúrese de tener el CLI executionpermiso de control de acceso basado en roles (RBAC) para usar el escáner de máquinas virtuales de la CLI. Consulte Permisos de roles detallados .
+Integrar en sus pipelines de CI/CD
+Se sysdig-cli-scannerpuede incluir como un paso en sus pipelines de CI/CD, como las acciones de Jenkins y GitHub, simplemente ejecutando el sysdig-cli-scannercomando como parte de su pipeline.
+
+Asegúrese de que el sysdig-cli-scannerbinario esté disponible como parte del trabajador o ejecutor donde se ejecuta la canalización.
+Si está ejecutando un entorno efímero en la canalización, incluya los pasos de descarga y configuración ejecutables en su canalización para descargar la herramienta en cada ejecución.
+Define un secreto que contenga el token API y ponlo a disposición en la canalización (es decir, a través de una SECURE_API_TOKENvariable de entorno).
+Incluya un paso en su canalización para ejecutarlo sysdig-cli-scannerdespués de crear la imagen del contenedor y proporcione el nombre de la imagen como parámetro. Por ejemplo:
+./sysdig-cli-scanner --apiurl <sysdig-api-url> ${IMAGE_NAME}
+Vea algunos ejemplos sobre cómo usarlo en diferentes pipelines de CI/CD:
+
+AWS CodeBuild
+Azure Pipelines
+GitHub
+GitLab
+Jenkins
+Integración de políticas de vulnerabilidad
+Las políticas permiten definir un conjunto de reglas que evaluarán cada resultado del análisis. Tras la evaluación, cada política se aprobará o rechazará. Se produce un fallo o incumplimiento de una política si el resultado del análisis no cumple todas las reglas de una política.
+
+Para CI/CD y análisis manuales de imágenes, puede indicar a la sysdig-cli-scannerherramienta que evalúe explícitamente una o más políticas mediante la --policy= policy1,policy2,...bandera y proporcionar una lista de nombres de políticas separados por comas. Estas se evaluarán sobre las políticas que coincidan con el alcance de la imagen.
+
+Las políticas de CI/CD se pueden configurar como " Aplicar siempre" . Si una política tiene la opción "Aplicar siempre" , se evaluará en cada imagen escaneada, incluso si no se especifica explícitamente.
+
+Obtenga más información sobre las políticas de gestión de vulnerabilidades, las reglas disponibles y cómo definir políticas en Políticas de vulnerabilidad .
+
+Parámetros
+Uso básico del sysdig-cli-scanner:
+
+sysdig-cli-scanner [OPTIONS] <ImageName>
+
+Requerido
+Opción	Descripción
+SECURE_API_TOKEN	Proporcione el token de API como variable de entorno SECURE_API_TOKEN. Puede obtenerlo desde Configuración > Perfil de usuario en Sysdig Secure.
+--apiurl=<endpoint>	Punto final seguro de Sysdig. En SaaS, este valor depende de la región y se completa automáticamente en la página "Comenzar" de la interfaz de usuario.
+ImageName	La imagen que desea escanear. Por ejemplo mongo-express:0.54.0.
+El escáner CLI de Sysdig intentará encontrar una imagen local en Docker, ContainerD u otros entornos de ejecución de contenedores, o intentará extraerla del registro remoto.
+Una vez completado el escaneo, verás los resultados directamente en la consola y estarán disponibles en la sección Pipeline de la UI.
+Credenciales de Registro
+Las credenciales de registro se pueden proporcionar a través de las siguientes variables de entorno
+
+Opción	Descripción
+REGISTRY_USER	Proporcione el nombre de usuario del registro como variable de entorno REGISTRY_USER.
+REGISTRY_PASSWORD	Proporcione la contraseña de registro como variable de entorno REGISTRY_PASSWORD.
+Ejemplo
+
+REGISTRY_USER=<YOUR_REGISTRY_USERNAME> REGISTRY_PASSWORD=<YOUR_REGISTRY_PASSWORD> SECURE_API_TOKEN=<YOUR_API_TOKEN> ./sysdig-cli-scanner --apiurl https://secure.sysdig.com ${REPO_NAME}/${IMAGE_NAME}
+Mostrar capas de imagen
+Opción	Descripción
+--separate-by-image	Muestra información detallada de capas separando paquetes por imagen base, mutuamente excluyentes con --separate-by-layer.
+--separate-by-layer	Muestra información detallada de las capas separando los paquetes por capa, mutuamente excluyentes con –separate-by-image`.
+Parámetros adicionales
+Bandera	Bandera corta	Descripción
+--apiurl=	-a	La URL base de la API segura.
+--cachepath=	-p	La ruta de caché.
+--clearcache	-c	Borre la caché antes de ejecutar. El valor predeterminado es false.
+--console-log		Forzar registros a la consola, mutuamente excluyente con--logfile
+--dbpath=	-d	Ruta absoluta del directorio de la base de datos. TENGA EN CUENTA QUE LOS ARCHIVOS DE ESTE DIRECTORIO PODRÍAN SER BORRADOS. El valor predeterminado es{executablePath}/main.db
+--detailed-policies-eval		Mostrar una vista detallada de la evaluación de políticas.
+--fips		Utilice la biblioteca criptográfica FIPS estándar.
+--full-vulns-table		Mostrar la lista completa de paquetes encontrados.
+--help	-h	Mostrar mensaje de ayuda completo; consulte a continuación para obtener más detalles.
+--iac		Ejecutar análisis IaC. Úselo --iac -hpara obtener ayuda sobre los comandos IaC.
+--json-scan-result=		OBSOLETO . Usar --output=json-file=<destination> --output-schema=v1beta3. El archivo de salida del resultado del escaneo JSON en el formato designado.
+--logfile=	-o	Destino de archivo para registros; mutuamente excluyente con--console-log
+--loglevel=	-l	Selección del nivel de registro. Las opciones son: información (predeterminada), depuración
+--no-cache		No utilice ninguna caché durante el análisis; se ignorarán los demás parámetros relacionados con la caché. El valor predeterminado es false.
+--offline-analyzer		[Modo independiente] El analizador no realiza llamadas de backend. El valor predeterminado es false.
+--output=		Formato de salida. Especifique uno de los siguientes:[json,json-file=<destination_path>,csv,csv-file=<destination_path>]
+--output-json=		OBSOLETO . Usar --output=json-file=<destination> --output-schema=legacy. La ruta de salida del informe de resultados del análisis en formato JSON.
+--output-schema=		Esquema del archivo de salida. Para json/json-file: legacy, v1beta2, v1beta3, v1. Para csv/csv-file: v1, v2. Debe usarse junto con –output=<json,json-file,csv,csv-file>", valor predeterminado: “v1”. Por ejemplo,--output=json-file=~/en/cliscan.json --output-schema=v1
+--override-pullstring=		Especifique un nombre de imagen personalizado que se mostrará en la interfaz de usuario de Sysdig.
+--platform=		Especifique la plataforma para seleccionar la imagen.
+--policy=		Identificar políticas a aplicar, además de políticas que coincidan con el alcance de la imagen.
+--separate-by-image		Muestra información detallada de capas separando paquetes por imagen base, mutuamente excluyentes con--separate-by-layer
+--separate-by-layer		Muestra información detallada de las capas separando los paquetes por capa, mutuamente excluyentes con--separate-by-image
+--skip-get-database		[modo independiente] No descargar la base de datos incluso si está obsoleta o dañada (valor predeterminado: falso)
+--skiptlsverify	-s	OBSOLETO (use --api-skiptlsverifyy --registry-skiptlsverifypara un control más granular) Omitir la verificación del certificado TLS al interactuar con Sysdig Backend y extraer imágenes (valor predeterminado: falso)
+--api-skiptlsverify		Omitir la verificación del certificado TLS al interactuar con Sysdig Backend (valor predeterminado: falso)
+--registry-skiptlsverify		Omitir la verificación del certificado TLS al extraer imágenes de los registros de contenedores (valor predeterminado: falso)
+--registry-insecure		Permitir la extracción de imágenes de los registros a través de HTTP (predeterminado: falso)
+--skipupload	-u	[modo independiente] No cargar los resultados del escaneo (predeterminado: falso)
+--standalone	-n	No depende del backend de Sysdig para su ejecución, lo que evita la necesidad de especificar --apiurly SECURE_API_TOKEN. Implica la activación de todas las opciones marcadas con [modo independiente] (predeterminado: falso).
+--version		Mostrar la versión y salir
+Ejemplo de salida de ayuda
+Códigos de salida del escáner CLI
+Acceda a los códigos de salida del contenedor con-h
+
+Los códigos son:
+
+Código de error	Descripción
+0	La imagen pasó la evaluación de políticas
+1	La imagen no superó la evaluación de la política
+2	Parámetros incorrectos. Por ejemplo, no se proporcionó ningún token de API.
+3	Otros errores de ejecución
+Utilice el código de salida, por ejemplo, para decidir si desea abortar la canalización CI/CD.
+
+Fuentes de imágenes
+El escáner Sysdig CLI puede cargar imágenes de diferentes fuentes. De forma predeterminada, intentará encontrar automáticamente el nombre de la imagen proporcionada entre todas las fuentes compatibles, en el orden especificado en la siguiente lista. Sin embargo, puede seleccionar explícitamente la fuente de la imagen utilizando el prefijo correspondiente para el nombre de la imagen:
+
+Prefijo	Nombre	Descripción
+docker://	Demonio de Docker	Cargue la imagen desde el demonio Docker (respetando la DOCKER_HOSTvariable de entorno u otros archivos de configuración de Docker).
+podman://	Podman	Cargue la imagen desde el demonio Podman.
+file://	Archivo Docker (tar) o carpeta OCI	Cargue la imagen desde un archivo .tar guardado como un archivo de imagen Docker (comando guardar de Docker) o desde una carpeta OCI.
+containerd://	En contenedor	Cargue la imagen desde el demonio Containerd, que administra los ciclos de vida de los contenedores en el host.
+crio://	CRI-O	Cargue la imagen desde la ubicación de almacenamiento de contenedores (utilizada por CRI-O para entornos de Kubernetes).
+pull://	Registro de Docker	Forzar la extracción de la imagen desde un repositorio remoto, ignorando las imágenes locales con el mismo nombre.
+es decir, extraer la imagen del registro remoto incluso si está disponible localmente:
+
+./sysdig-cli-scanner -a https://secure.sysdig.com pull://nginx:latest
+Anular configuración de plataforma
+Puede utilizar el --platformparámetro para escanear una plataforma específica en busca de una imagen determinada.
+
+Cuando no se especifica la plataforma y el escáner tiene que extraer la imagen de forma remota, se produce el siguiente comportamiento:
+
+Si la cadena de extracción pertenece a una lista de manifiesto, el escáner elige la primera plataforma en la lista de manifiesto.
+Si la cadena de extracción pertenece a un único manifiesto, el escáner la escanea directamente.
+Cuando se define una plataforma con el parámetro, el escáner utiliza solo la plataforma especificada:
+
+Si la imagen existe solo localmente, el escáner verifica si hay disponible una versión específica de la plataforma correspondiente:
+
+Si existe una imagen coincidente, se escanea.
+Si no existe ninguna imagen coincidente, se devuelve un error.
+Si la imagen no está disponible localmente, el escáner intenta obtenerla de un registro remoto:
+
+Para las listas de manifiestos ( Índice de imagen ), recupera la imagen correspondiente a la plataforma especificada. Si no se encuentra ninguna coincidencia, se devuelve un error.
+Para las imágenes de Manifest V2, el escáner solo extrae la imagen si coincide con la plataforma solicitada. De lo contrario, se devuelve un error.
+Si la imagen existe tanto local como remotamente, el escáner sigue un enfoque estructurado. Primero, comprueba si la plataforma especificada existe localmente.
+
+Si se encuentra una coincidencia, se escanea la imagen.
+Si no existe ninguna coincidencia local, el escáner intenta extraer la imagen de plataforma correcta del registro.
+Si tampoco se encuentra ninguna imagen coincidente de forma remota, se devuelve un error.
+Especifique una versión de plataforma para escanear
+Escanear ppc64le
+Al escanear una compilación multiarquitectura, docker.io/library/golang:1.24.0el escáner CLI seleccionará la primera plataforma disponible en el manifiesto. En este caso, amd64.
+
+Para escanear una plataforma diferente, por ejemplo ppc64le, ejecute el escáner de la siguiente manera:
+
+$ SECURE_API_TOKEN=<YOUR_API_TOKEN> ./sysdig-cli-scanner --apiurl https://secure.sysdig.com --platform=linux/ppc64le quay.io/prometheus/node-exporter:latest
+Escanear amd64
+En el siguiente ejemplo, el escáner CLI seleccionará la primera versión de Windows disponible en el manifiesto para escanear.
+
+$ SECURE_API_TOKEN=<YOUR_API_TOKEN> ./sysdig-cli-scanner --apiurl https://secure.sysdig.com --platform=windows/amd64 golang:latest
+Para escanear AMD, ejecute lo siguiente:
+
+$ SECURE_API_TOKEN=<YOUR_API_TOKEN> ./sysdig-cli-scanner --apiurl https://secure.sysdig.com --platform=linux/amd64 golang:latest
+Resultado de muestra en la terminal
+Es posible ver los resultados del escaneo en la ventana del terminal (ver a continuación)
+
+$ SECURE_API_TOKEN=<YOUR_API_TOKEN> ./sysdig-cli-scanner --apiurl https://secure.sysdig.com redis
+
+Type: dockerImage
+ImageID: sha256:7614ae9453d1d87e740a2056257a6de7135c84037c367e1fffa92ae922784631
+Digest: redis@sha256:db485f2e245b5b3329fdc7eff4eb00f913e09d8feb9ca720788059fdc2ed8339
+BaseOS: debian 11.2
+PullString: pull:*//redis*
+
+66 vulnerabilities found
+8 Critical (0 fixable)
+2 High (0 fixable)
+4 Medium (0 fixable)
+5 Low (0 fixable)
+47 Negligible (0 fixable)
+
+  POLICIES EVALUATION
+  Policy: Sysdig Best Practices FAILED (9 failures)`
+Puede utilizar --full-vulns-tableo --detailed-policies-evalbanderas para incluir más detalles en la salida.
+
+Para obtener un resultado de escaneo más fácil de usar, busque la imagen en la interfaz de usuario.
+
+Registros de escaneo para la solución de problemas
+Escribe sysdig-cli-scannerautomáticamente un archivo de registro en cada ejecución. Puede cambiar la ruta de salida con los indicadores -oo --logfile. Para solucionar problemas, puede cambiar el nivel de registro configurando --loglevel=debug. Esto aumentará la cantidad de información de los mensajes de registro al debugnivel indicado.
+
+Próximos pasos
+Revise los resultados del escaneo en la IU de Vulnerabilidades > Pipeline .
+
+Logotipo de Sysdig
+Política de privacidad Cambiar consentimiento Condiciones de uso
+© Derechos de autor 2026 Sysdig, Inc.
+
